@@ -28,7 +28,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/exchange" element={<ExchangeRates />} />
             <Route path="/about" element={<About />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/notfound" element={<NotFound/>}></Route>
+            <Route path="*" element={<ErrorBoundary />} />
           </Routes>
         </ErrorBoundary>
       </BrowserRouter>

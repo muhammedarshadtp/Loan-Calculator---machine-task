@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, Button } from '@mui/material';
 
 export default class ErrorBoundary extends React.Component {
   state = { hasError: false };
@@ -14,6 +14,7 @@ export default class ErrorBoundary extends React.Component {
             Something went wrong.
           </Typography>
           <Typography>Please refresh or try again later.</Typography>
+          
         </Box>
       );
     }
