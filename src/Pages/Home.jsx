@@ -1,16 +1,34 @@
 import React, { useState } from 'react';
 import {
-  Box, Grid, Typography, Button, TextField, useMediaQuery, useTheme
+  Box,
+  Grid,
+  Typography,
+  Button,
+  TextField,
+  useMediaQuery,
+  useTheme,
+  Paper,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import useEmiCalculation from '../Hooks/useEmiCalculate';
 import { useThemeCurrency } from '../Context/Theme currencyContextApi';
 import useExchangeRates from '../Hooks/useExchangeRate';
 
 export default function Home() {
-  const [amount, setAmount] = useState('10000');
+  const [amount, setAmount] = useState('100000');
   const [rate, setRate] = useState('8.5');
   const [years, setYears] = useState('5');
   const [emi, setEmi] = useState(0);
+
   const { calculate, schedule } = useEmiCalculation();
   const { currency, setCurrency } = useThemeCurrency();
   const rates = useExchangeRates('USD');
@@ -19,45 +37,44 @@ export default function Home() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleCalc = () => {
-    const amt = parseFloat(amount);
-    const intRate = parseFloat(rate);
-    const yrs = parseFloat(years);
-
-    if (isNaN(amt) || isNaN(intRate) || isNaN(yrs)) {
-      alert("Please enter valid numeric values.");
+    const a = parseFloat(amount), r = parseFloat(rate), y = parseFloat(years);
+    if (isNaN(a) || isNaN(r) || isNaN(y)) {
+      alert('Please enter valid numbers.');
       return;
     }
-    const m = calculate(amt, intRate, yrs);
-    setEmi(m);
+    setEmi(calculate(a, r, y));
   };
 
+  const handleReset = () => window.location.reload();
+
   return (
-    <Box sx={{ px: isMobile ? 3 : 14 }}>
+    <Box sx={{ px: isMobile ? 2 : 10, py: 4 }}>
       <Typography variant="h4" gutterBottom>
         Loan Calculator Dashboard
       </Typography>
 
+      {/* Inputs */}
       <Grid container spacing={2}>
         {[
           ['Loan Amount', amount, setAmount],
           ['Interest Rate (%)', rate, setRate],
-          ['Term (Years)', years, setYears]
+          ['Term (Years)', years, setYears],
         ].map(([label, val, setter]) => (
           <Grid item xs={12} md={4} key={label}>
             <TextField
-              fullWidth
-              type="text"
-              variant="outlined"
               label={label}
+              variant="outlined"
+              fullWidth
               value={val}
               onChange={e => setter(e.target.value)}
-              placeholder={label}
+              type="text"
             />
           </Grid>
         ))}
       </Grid>
 
-      <Box sx={{ textAlign: 'start', mt: 3 }}>
+      {/* Calculate */}
+      <Box sx={{ mt: 3, textAlign: 'left' }}>
         <Button variant="contained" size="large" onClick={handleCalc}>
           CALCULATE
         </Button>
@@ -65,103 +82,114 @@ export default function Home() {
 
       {emi > 0 && (
         <Box sx={{ mt: 4 }}>
+          {/* Monthly EMI */}
           <Typography variant="h6" gutterBottom>
             Monthly EMI: ${emi.toFixed(2)}
           </Typography>
 
-          {/* Currency + Converted EMI + Reset button in a row */}
+          {/* Currency + Converted EMI + Reset */}
           <Box
             sx={{
               display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'space-between',
-              alignItems: { xs: 'flex-start', sm: 'center' },
-              gap: 2,
               flexWrap: 'wrap',
-              mb: 2
+              gap: 1,
+              mb: 2,
+              alignItems: 'center',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box>
-                <Typography variant="body2" gutterBottom>
-                  Currency
-                </Typography>
-                <select
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FormControl size="small" sx={{ minWidth: 72 }}>
+                <InputLabel>Currency</InputLabel>
+                <Select
+                  label="Currency"
                   value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  style={{
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid #ccc',
-                    minWidth: '80px'
-                  }}
+                  onChange={e => setCurrency(e.target.value)}
                 >
-                  <option value="USD">USD</option>
-                  <option value="INR">INR</option>
-                  <option value="EUR">EUR</option>
-                </select>
-              </Box>
-
+                  <MenuItem value="USD">USD</MenuItem>
+                  <MenuItem value="INR">INR</MenuItem>
+                  <MenuItem value="EUR">EUR</MenuItem>
+                  <MenuItem value="GBP">GBP</MenuItem>
+                </Select>
+              </FormControl>
               <Typography variant="body1" sx={{ whiteSpace: 'nowrap' }}>
                 Converted EMI: {(emi * (rates[currency] || 1)).toFixed(2)} {currency}
               </Typography>
-            </Box>
-
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => window.location.reload()}
-            >
+              <Button variant="outlined" color="secondary" onClick={handleReset}>
               RESET TABLE
             </Button>
+            </Box>
+            
           </Box>
+          
 
-          {/* Scrollable Table */}
-          <Box
-            sx={{
-              overflowX: 'auto',
-              border: '1px solid #e0e0e0',
-              borderRadius: 2,
-              maxWidth: '100%'
-            }}
-          >
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-              <thead>
-                <tr>
-                  {['Month', 'Principal', 'Interest', 'Remaining Balance'].map((header) => (
-                    <th
-                      key={header}
-                      style={{
-                        padding: '12px',
-                        borderBottom: '1px solid #ccc',
-                        backgroundColor: '#f5f5f5',
-                        textAlign: 'left',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {schedule.map((row) => (
-                  <tr key={row.month}>
-                    <td style={{ padding: '12px' }}>{row.month}</td>
-                    <td style={{ padding: '12px' }}>
-                      {(row.principal * (rates[currency] || 1)).toFixed(2)} {currency}
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      {(row.interest * (rates[currency] || 1)).toFixed(2)} {currency}
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      {(row.balance * (rates[currency] || 1)).toFixed(2)} {currency}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Box>
+          {/* Amortization Schedule */}
+          <Paper sx={{ borderRadius: 2, p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Amortization Schedule ({currency})
+            </Typography>
+
+            {isMobile ? (
+              /* Mobile: no horizontal scroll, wrap last header and cells */
+              <TableContainer>
+                <Table size="small" aria-label="schedule">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Month</TableCell>
+                      <TableCell>Principal</TableCell>
+                      <TableCell>Interest</TableCell>
+                      <TableCell sx={{ whiteSpace: 'normal' }}>Remaining<br/>Balance</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {schedule.map(row => (
+                      <TableRow key={row.month}>
+                        <TableCell>{row.month}</TableCell>
+                        <TableCell>
+                          {(row.principal * (rates[currency]||1)).toFixed(2)} {currency}
+                        </TableCell>
+                        <TableCell>
+                          {(row.interest * (rates[currency]||1)).toFixed(2)} {currency}
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'normal' }}>
+                          {(row.balance * (rates[currency]||1)).toFixed(2)} {currency}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              /* Desktop: keep horizontal scroll for wide table */
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 600 }} aria-label="schedule">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Month</TableCell>
+                      <TableCell>Principal</TableCell>
+                      <TableCell>Interest</TableCell>
+                      <TableCell>Remaining Balance</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {schedule.map(row => (
+                      <TableRow key={row.month}>
+                        <TableCell>{row.month}</TableCell>
+                        <TableCell>
+                          {(row.principal * (rates[currency]||1)).toFixed(2)} {currency}
+                        </TableCell>
+                        <TableCell>
+                          {(row.interest * (rates[currency]||1)).toFixed(2)} {currency}
+                        </TableCell>
+                        <TableCell>
+                          {(row.balance * (rates[currency]||1)).toFixed(2)} {currency}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            )}
+          </Paper>
         </Box>
       )}
     </Box>
